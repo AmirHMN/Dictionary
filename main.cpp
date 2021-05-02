@@ -75,7 +75,7 @@ int main() {
             case 3:
                 cout << "Enter the word you want to delete the synonym for: \n";
                 cin >> word;
-                cout << "Enter the synonym tou wanna delete \n";
+                cout << "Enter the synonym you wanna delete \n";
                 cin >> synonym;
                 deleteSynonym(head, word, synonym);
                 break;
@@ -142,7 +142,7 @@ void printDictionary(Word *&head) {
     }
     cout << " --------------- " << endl;
     while (current != nullptr) {
-        cout << current->word << " : ";
+        cout << "Word : " << current->word << "   Synonyms : ";
         currentSyn = current->synonym;
         while (currentSyn != nullptr) {
             cout << currentSyn->word << " ";
@@ -206,9 +206,9 @@ void addSynonym(Word *&head, const string &word, Word *temp) {
             currentSyn = currentSyn->next;
         }
         //add new synonyms
-        if (temp->word != currentSyn->word){
+        if (temp->word != currentSyn->word) {
             temp->next = currentSyn->next;
-            currentSyn->next = temp; 
+            currentSyn->next = temp;
         }
 
     }
@@ -298,7 +298,7 @@ void searchWord(Word *&head, const string &word) {
     }
     // print word and synonyms
     cout << " --------------- " << endl;
-    cout << current->word << " : ";
+    cout << "Word : " << current->word << "   Synonyms : ";
     currentSyn = current->synonym;
     while (currentSyn != nullptr) {
         cout << currentSyn->word << " ";
@@ -308,16 +308,25 @@ void searchWord(Word *&head, const string &word) {
 }
 
 void changeMisspelling(Word *&head, const string &currentWord, const string &newWord) {
-    Word *current = head;
+    Word *current = head, *current2 = head;
     while (current->word != currentWord) {
         current = current->next;
         if (current == nullptr) {
             cout << currentWord << " is not in the dictionary!\n";
-
             return;
         }
     }
-    current->word = newWord;
+    //create new word sorted by name
+    addWord(head, creatWord(newWord));
+    while (current2) {
+        if (current2->word == newWord)break;
+        current2 = current2->next;
+    }
+    //link old synonyms to new sorted word
+    current2->synonym = current->synonym;
+    
+    //delete old word
+    deleteWord(head, current->word);
 }
 
 void writeOnFile(Word *&head, const string &path) {
