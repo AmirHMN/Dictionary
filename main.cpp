@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 struct Word {
@@ -28,10 +29,14 @@ void searchWord(Word *&head, const string &word);
 
 void changeMisspelling(Word *&head, const string &currentWord, const string &newWord);
 
+void writeOnFile(Word *&head);
+
+void readFromFile(Word *&head);
+
 int main() {
     Word *head = nullptr;
     int inputChoice, countOfSynonyms;
-    string word, synonym , changeWord;
+    string word, synonym, changeWord;
     do {
         cout << "0.Exit\n";
         cout << "1.Add word and synonyms\n";
@@ -40,6 +45,8 @@ int main() {
         cout << "4.Search word\n";
         cout << "5.Print dictionary\n";
         cout << "6.Change misspelling of words\n";
+        cout << "7.Save on a file\n";
+        cout << "8.Import from file\n";
         cin >> inputChoice;
         switch (inputChoice) {
             case 0:
@@ -51,6 +58,8 @@ int main() {
                 cout << "Enter count of synonyms you wanna add: \n";
                 cin >> countOfSynonyms;
 
+                //if there is no synonym delete the word
+                if (countOfSynonyms == 0)deleteWord(head, word);
                 for (int i = 0; i < countOfSynonyms; ++i) {
                     cout << "Enter" << i + 1 << "th synonyms you wanna add: \n";
                     cin >> synonym;
@@ -82,13 +91,18 @@ int main() {
                 cin >> changeWord;
                 cout << "Enter the new word\n";
                 cin >> word;
-                changeMisspelling(head , changeWord , word);
+                changeMisspelling(head, changeWord, word);
+                break;
+            case 7:
+                writeOnFile(head);
+            case 8:
+                readFromFile(head);
                 break;
             default:
                 cout << "Something was wrong!\n------------\n";
                 break;
         }
-    } while (inputChoice!=0);
+    } while (inputChoice != 0);
     return 0;
 }
 
@@ -175,6 +189,7 @@ int deleteWord(Word *&head, const string &word) {
     Word *current = head;
     //if list is empty
     if (head == nullptr) {
+        cout << "The word not found!\n\n";
         return 0;
     } else {
         while (current != nullptr) {
@@ -189,12 +204,14 @@ int deleteWord(Word *&head, const string &word) {
                     perv->next = current->next;
                 }
                 delete current; //delete word and free memory on heap
+                cout << "the word and synonyms deleted successfully\n\n";
                 return 1;
             }
             perv = current;
             current = current->next;
         }
     }
+    cout << "the word not found!\n\n";
     return 0;
 }
 
@@ -205,6 +222,7 @@ int deleteSynonym(Word *&head, const string &word, const string &syn) {
 
     //if list is empty
     if (current == nullptr) {
+        cout << "the synonym not found!\n\n";
         return 0;
     } else {
         while (current->word != word) {
@@ -227,12 +245,14 @@ int deleteSynonym(Word *&head, const string &word, const string &syn) {
                 if (current->synonym == nullptr) { // delete word if there is not any synonym for the word
                     deleteWord(head, word);
                 }
+                cout << "the synonym deleted successfully\n\n";
                 return 1;
             }
             pervSyn = currentSyn;
             currentSyn = currentSyn->next;
         }
     }
+    cout << "the synonym not found!\n\n";
     return 0;
 }
 
@@ -242,20 +262,18 @@ void searchWord(Word *&head, const string &word) {
     while (current->word != word) {
         current = current->next;
         if (current == nullptr) {
-            cout << "\nThis word is not in the dictionary!\n";
+            cout << "This word is not in the dictionary!\n\n";
             return;
         }
     }
-
+    // print word and synonyms
     cout << " --------------- " << endl;
-
     cout << current->word << " : ";
     currentSyn = current->synonym;
     while (currentSyn != nullptr) {
         cout << currentSyn->word << " ";
         currentSyn = currentSyn->next;
     }
-
     cout << "\n --------------- " << endl;
 }
 
@@ -270,4 +288,54 @@ void changeMisspelling(Word *&head, const string &currentWord, const string &new
         }
     }
     current->word = newWord;
+}
+
+void writeOnFile(Word *&head) {
+    ofstream write("dictionary.txt");
+    Word *current = head;
+    Word *currentSyn;
+    if (current == nullptr) {
+        return;
+    }
+    while (current != nullptr) {
+        write << current->word << " ";
+        currentSyn = current->synonym;
+        while (currentSyn != nullptr) {
+            write << currentSyn->word << " ";
+            currentSyn = currentSyn->next;
+        }
+        write << endl;
+        current = current->next;
+    }
+    write.close();
+}
+
+void readFromFile(Word *&head) {
+    ifstream read("dictionary.txt");
+    string line;
+    string word, synonym;
+    int length;
+
+    while (getline(read, line)) {
+        length = line.length();
+
+        if (line[length - 1] != ' ')line += " "; // add a space at the end of line
+        length = line.length();
+        int pos = line.find_first_of(' ');
+
+
+        word = line.substr(0, pos); //specify the first word as main word in dictionary
+        pos++;
+        int pos2 = pos; // pos2 specify the beginning of each synonym index in string
+        addWord(head, creatWord(word)); //add to list
+
+        for (int i = pos; i < length; ++i) {
+            //check for space to split words and add synonyms one by one
+            if (line[i] == ' ') {
+                synonym = line.substr(pos2, i - pos2);
+                addSynonym(head, word, creatWord(synonym));
+                pos2 = i + 1;
+            }
+        }
+    }
 }
