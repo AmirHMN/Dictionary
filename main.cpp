@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstring>
 
 using namespace std;
 struct Word {
@@ -29,16 +30,15 @@ void searchWord(Word *&head, const string &word);
 
 void changeMisspelling(Word *&head, const string &currentWord, const string &newWord);
 
-void writeOnFile(Word *&head);
+void writeOnFile(Word *&head, const string &path);
 
-void readFromFile(Word *&head);
+void readFromFile(Word *&head, const string &path);
 
 int main() {
     Word *head = nullptr;
     int inputChoice, countOfSynonyms;
-    string word, synonym, changeWord;
+    string word, synonym, changeWord, path;
     do {
-        cout << "0.Exit\n";
         cout << "1.Add word and synonyms\n";
         cout << "2.Delete word\n";
         cout << "3.Delete synonym of a word\n";
@@ -47,10 +47,11 @@ int main() {
         cout << "6.Change misspelling of words\n";
         cout << "7.Save on a file\n";
         cout << "8.Import from file\n";
+        cout << "9.Exit\n";
+
         cin >> inputChoice;
         switch (inputChoice) {
-            case 0:
-                break;
+
             case 1:
                 cout << "Enter your new word: \n";
                 cin >> word;
@@ -94,15 +95,41 @@ int main() {
                 changeMisspelling(head, changeWord, word);
                 break;
             case 7:
-                writeOnFile(head);
+                cout << "Enter path you wanna save file:\n";
+                cin >> path;
+                writeOnFile(head, path);
+                break;
             case 8:
-                readFromFile(head);
+                cout << "Enter path you wanna import file:\n";
+                cin >> path;
+                readFromFile(head, path);
+                break;
+            case 9:
+                cout << "Do you want to save file?\n1.Yes 2.No\n";
+                cin >> inputChoice;
+                switch (inputChoice) {
+
+                    case 1:
+                        cout << "Enter path you wanna save file:\n";
+                        cin >> path;
+                        writeOnFile(head, path);
+                        inputChoice = 9;
+                        break;
+                    case 2:
+                        cout << "File not saved!\n";
+                        inputChoice = 9;
+                        break;
+                    default:
+                        cout << "Wrong number!\n\n";
+                        inputChoice = 0;
+                        break;
+                }
                 break;
             default:
                 cout << "Something was wrong!\n------------\n";
                 break;
         }
-    } while (inputChoice != 0);
+    } while (inputChoice != 9);
     return 0;
 }
 
@@ -168,7 +195,7 @@ void addSynonym(Word *&head, const string &word, Word *temp) {
     }
 
     // if synonyms is empty or new synonym is smaller than all synonyms
-    if (current->synonym == nullptr || current->synonym->word >= temp->word) {
+    if (current->synonym == nullptr || current->synonym->word > temp->word) {
         temp->next = current->synonym;
         current->synonym = temp;
     } else {
@@ -179,8 +206,11 @@ void addSynonym(Word *&head, const string &word, Word *temp) {
             currentSyn = currentSyn->next;
         }
         //add new synonyms
-        temp->next = currentSyn->next;
-        currentSyn->next = temp;
+        if (temp->word != currentSyn->word){
+            temp->next = currentSyn->next;
+            currentSyn->next = temp; 
+        }
+
     }
 }
 
@@ -290,8 +320,8 @@ void changeMisspelling(Word *&head, const string &currentWord, const string &new
     current->word = newWord;
 }
 
-void writeOnFile(Word *&head) {
-    ofstream write("dictionary.txt");
+void writeOnFile(Word *&head, const string &path) {
+    ofstream write(path);
     Word *current = head;
     Word *currentSyn;
     if (current == nullptr) {
@@ -310,15 +340,14 @@ void writeOnFile(Word *&head) {
     write.close();
 }
 
-void readFromFile(Word *&head) {
-    ifstream read("dictionary.txt");
+void readFromFile(Word *&head, const string &path) {
+    ifstream read(path);
     string line;
     string word, synonym;
     int length;
-
-    while (getline(read, line)) {
+    while (!getline(read, line).eof()) {
+        if (line == "") continue;
         length = line.length();
-
         if (line[length - 1] != ' ')line += " "; // add a space at the end of line
         length = line.length();
         int pos = line.find_first_of(' ');
