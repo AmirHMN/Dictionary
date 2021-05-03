@@ -62,7 +62,7 @@ int main() {
                 //if there is no synonym delete the word
                 if (countOfSynonyms == 0)deleteWord(head, word);
                 for (int i = 0; i < countOfSynonyms; ++i) {
-                    cout << "Enter" << i + 1 << "th synonyms you wanna add: \n";
+                    cout << "Enter " << i + 1 << "th synonyms you wanna add: \n";
                     cin >> synonym;
                     addSynonym(head, word, creatWord(synonym));
                 }
@@ -174,7 +174,7 @@ void addWord(Word *&head, Word *temp) {
         current = head;
         // Navigation in linked list till new word smaller than next one
         // or arrive to the end
-        while (current->next != nullptr && current->next->word < temp->word) {
+        while (current->next != nullptr && current->next->word <= temp->word) {
             current = current->next;
         }
         //add new node
@@ -202,7 +202,7 @@ void addSynonym(Word *&head, const string &word, Word *temp) {
         currentSyn = current->synonym;
         // Navigation in synonyms till new word smaller than next one
         // or arrive to the end
-        while (currentSyn->next != nullptr && currentSyn->next->word < temp->word) {
+        while (currentSyn->next != nullptr && currentSyn->next->word <= temp->word) {
             currentSyn = currentSyn->next;
         }
         //add new synonyms
@@ -324,7 +324,7 @@ void changeMisspelling(Word *&head, const string &currentWord, const string &new
     }
     //link old synonyms to new sorted word
     current2->synonym = current->synonym;
-    
+
     //delete old word
     deleteWord(head, current->word);
 }
@@ -360,8 +360,6 @@ void readFromFile(Word *&head, const string &path) {
         if (line[length - 1] != ' ')line += " "; // add a space at the end of line
         length = line.length();
         int pos = line.find_first_of(' ');
-
-
         word = line.substr(0, pos); //specify the first word as main word in dictionary
         pos++;
         int pos2 = pos; // pos2 specify the beginning of each synonym index in string
